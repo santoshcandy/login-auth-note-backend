@@ -4,6 +4,9 @@ from rest_framework import generics
 from .Serializers import UserSerializer , NoteSerializer
 from rest_framework.permissions import IsAuthenticated , AllowAny
 from .models import Note
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 # Create your views here.
 
 
@@ -49,3 +52,19 @@ class ListUserView(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
+class PasswordUpdateView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        username = request.data.get('username')
+        new_password = request.data.get('password')
+
+        try:
+            user = User.objects.get(username=username)
+            user.set_password(new_password)
+            user.save()
+            return Response({'message': 'Password updated successfully.'}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'error': 'User does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
